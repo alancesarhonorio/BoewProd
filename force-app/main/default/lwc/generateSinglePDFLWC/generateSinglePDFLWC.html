@@ -1,0 +1,10 @@
+<template>
+    <template if:true={showSpinner}>
+        <div class="slds-spinner_container" style="height: calc(100vh - 80px); display: flex; justify-content: center; align-items: center;">
+            <lightning-spinner alternative-text="Carregando" size="large"></lightning-spinner>
+        </div>
+    </template>
+    <template if:true={pdfUrl}>
+        <iframe src={pdfUrl} frameborder="0" style="width: 100%; height: calc(100vh - 10px);"></iframe>
+    </template>
+</template>

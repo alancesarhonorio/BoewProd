@@ -1,0 +1,15 @@
+<apex:page standardController="Fatura__c" recordSetVar="faturas">
+    <script>
+        function abrirNovaJanela(link) {
+            window.open(link, '_blank');
+            window.close(); // Esta linha irá fechar a janela atual após abrir a nova janela
+        }
+    </script>
+
+    <apex:repeat value="{!faturas}" var="fatura">
+        <div>
+            <apex:outputText value="{!fatura.Name}" />
+            <button onclick="abrirNovaJanela('{!fatura.Link_da_fatura__c}')">Abrir Fatura</button>
+        </div>
+    </apex:repeat>
+</apex:page>

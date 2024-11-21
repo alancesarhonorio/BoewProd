@@ -1,0 +1,6 @@
+<aura:component implements="lightning:availableForFlowActions"
+                access="global">
+    <aura:attribute name="type" type="string" default="success" />
+    <aura:attribute name="message" type="string" />
+    <aura:attribute name="duration" type="integer" />
+</aura:component>

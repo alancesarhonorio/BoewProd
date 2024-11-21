@@ -1,0 +1,31 @@
+<template>
+    <lightning-card title={tableTitle} icon-name="custom:custom3">
+        <div class="refresh-container">
+            <lightning-icon
+              icon-name="utility:refresh"
+              size="x-small"
+              alternative-text="Refresh"
+              title="Atualizar Tabela"
+              class="refresh-icon"
+              onclick={handleRefresh}
+            ></lightning-icon>
+        </div>
+        <div class="slds-var-m-around_medium">
+            <template lwc:if={usinas}>
+                <c-custom-types-global
+                    class="slds-table"
+                    key-field="Id"
+                    data={usinas}
+                    columns={columns}
+                    onsave={handleSave}
+                    onvalueselect={handleSelection}
+                    oncellchange={handleCellChange}
+                    oncancel={handleCancel}
+                    draft-values={draftValues}
+                    onrowaction={handleRowAction}
+                >
+                </c-custom-types-global>
+            </template>
+        </div>
+    </lightning-card>
+</template>

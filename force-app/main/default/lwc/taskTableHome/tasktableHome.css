@@ -1,0 +1,76 @@
+/* Estilos gerais para a tabela */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: #ddd;
+}
+
+/* Estilo para a célula de checkbox */
+.checkbox-cell {
+    width: 40px;
+    text-align: center;
+}
+
+.checkbox-cell input {
+    margin: 0;
+}
+
+/* Estilos do modal */
+.slds-modal {
+    /* Ajuste a largura do modal conforme necessário */
+    width: 50%;
+    max-width: 40rem; /* Define a largura máxima do modal */
+    margin: auto; /* Centraliza o modal */
+}
+
+.slds-modal__header {
+    background-color: #f4f6f9; /* Cor de fundo do cabeçalho do modal */
+    border-bottom: 1px solid #ddd; /* Borda inferior do cabeçalho */
+}
+
+.slds-modal__content {
+    padding: 20px; /* Espaçamento dentro do conteúdo do modal */
+}
+
+.slds-modal__footer {
+    background-color: #f4f6f9; /* Cor de fundo do rodapé do modal */
+    border-top: 1px solid #ddd; /* Borda superior do rodapé */
+ 
+}
+
+/* Estilo para o botão "Confirmar" */
+.slds-button.brand {
+    background-color: #0070d2; /* Cor do botão "Confirmar" */
+    color: #fff; /* Cor do texto do botão */
+}
+
+/* Estilo para o botão "Cancelar" */
+.slds-button_neutral {
+    background-color: #f4f6f9; /* Cor do botão "Cancelar" */
+    color: #0070d2; /* Cor do texto do botão */
+    border: 1px solid #ddd; /* Borda do botão "Cancelar" */
+}
+
+/* Efeito ao passar o mouse sobre os botões */
+.slds-button:hover {
+    opacity: 0.8; /* Leve transparência ao passar o mouse */
+}

@@ -1,0 +1,42 @@
+/* Estilização para a tabela */
+.slds-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+}
+
+/* Estilização para o cabeçalho da tabela */
+.slds-table thead th {
+    background-color: #f2f2f2;
+    color: #333;
+    font-weight: bold;
+    text-align: left;
+    padding: 0.5rem;
+    border-bottom: 2px solid #ddd;
+}
+
+/* Estilização para as células de dados */
+.slds-table tbody td {
+    padding: 0.5rem;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Alterna cores de fundo das linhas para facilitar a leitura */
+.slds-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Estilização quando o mouse passa por cima de uma linha */
+.slds-table tbody tr:hover {
+    background-color: #ddd;
+}
+
+.refresh-container {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px; /* Adicione espaçamento interno conforme necessário */
+}
+
+.refresh-icon {
+    cursor: pointer;
+}

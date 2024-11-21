@@ -1,0 +1,70 @@
+<template>
+    <lightning-card title="Vendedores escalados por dia" icon-name="standard:shift">
+        <lightning-layout multiple-rows="true">
+            <lightning-layout-item size="12" > 
+                <lightning-input 
+                    type="date" 
+                    label="Selecione uma data" 
+                    value={selectedDate} 
+                    onchange={handleDateChange}
+                    class="slds-var-m-around_medium">
+                </lightning-input>
+            </lightning-layout-item>
+            <lightning-layout-item size="8" class="slds-clearfix"> 
+                <lightning-combobox
+                    name="salesCombobox"
+                    label="Vendedor"
+                    value=""
+                    placeholder="Selecione o vendedor"
+                    options={options}
+                    onchange={handleUserComboboxChange}
+                    class="slds-var-m-around_medium"
+                    disabled={disableAddSalespersonButton}
+                    variant="label-hidden"
+                ></lightning-combobox>
+            </lightning-layout-item>
+            <lightning-layout-item size="4" class="slds-clearfix"> 
+                <lightning-button 
+                    label="Adicionar Vendedor(a)"
+                    icon-name="utility:new"
+                    title="Adicionar novo vendedor(a)"
+                    class="slds-var-m-around_medium slds-float_right" 
+                    variant="brand"
+                    disabled={disableAddSalespersonButton}
+                    onclick={handleButtonClick}>
+                </lightning-button>
+            </lightning-layout-item>
+        </lightning-layout> 
+        <template lwc:if={schedule}>
+            
+            <lightning-layout multiple-rows="true" class="slds-var-m-around_medium" vertical-align="center">
+                <template for:each={schedule} for:item="sch">
+                    <lightning-layout-item size="3" key={sch.Id}>  
+                        <c-user-list-item
+                            class="slds-show slds-is-relative"
+                            user={sch.Usuario__r}
+                            onselect={handleSelect}
+                        ></c-user-list-item>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="7" key={sch.Id}>
+                        <template if:true={sch.Usuario__r.SDR__c}>
+                            <lightning-badge label="SDR"></lightning-badge>
+                        </template>
+                    </lightning-layout-item>
+                    <lightning-layout-item size="2" key={sch.Id}>
+                        <lightning-button 
+                            variant="destructive" 
+                            label="Excluir" 
+                            title="Excluir Agente do planejamento" 
+                            icon-name="utility:delete" 
+                            class="slds-m-left_x-small"
+                            disabled={disableAddSalespersonButton}
+                            onclick={handleDelete}  
+                            data-id={sch.Id}> 
+                        </lightning-button>
+                    </lightning-layout-item>
+                </template>
+            </lightning-layout>
+        </template>
+    </lightning-card>
+</template>

@@ -1,0 +1,68 @@
+<template>
+  <!-- Cabeçalho do Modal -->
+  <lightning-modal-header label="Selecione um motivo de perda"></lightning-modal-header>
+
+  <!-- Corpo do Modal -->
+  <lightning-modal-body>
+      <lightning-card>
+          <div class="slds-grid slds-gutters slds-wrap">
+              
+              <!-- Motivo de Perda Combobox -->
+              <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-horizontal_x-small">
+                  <lightning-combobox 
+                      name="Motivo de perda" 
+                      label="Motivo de perda" 
+                      placeholder="Selecione um motivo de perda"
+                      value={motivoSelected} 
+                      options={motivoPerda}
+                      required
+                      onchange={handleMotivoChange}>
+                  </lightning-combobox>
+              </div>
+
+              <!-- Submotivo de Perda Combobox -->
+              <template if:false={submotivoOptionsIsEmpty}>
+                  <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-horizontal_x-small">
+                      <lightning-combobox 
+                          name="Submotivo de perda" 
+                          label="Submotivo de perda" 
+                          placeholder="Selecione um submotivo de perda"
+                          value={submotivoSelected}
+                          required 
+                          options={submotivoOptions}
+                          onchange={handleSubmotivoChange}>
+                      </lightning-combobox>
+                  </div>
+              </template>
+
+              <!-- Toggle para Pagamento Captação Parceiro com Indicadores de Cor -->
+              <template if:true={isCaptacaoParceiro}>
+                  <div class="slds-col slds-size_1-of-1 slds-p-top_medium slds-p-horizontal_x-small">
+                      <lightning-input 
+                          type="toggle" 
+                          label="Pagamento Captação Parceiro" 
+                          onchange={toggleCaptacaoParceiro}>
+                      </lightning-input>
+                  </div>
+              </template>
+          </div>
+      </lightning-card>
+  </lightning-modal-body>
+
+  <!-- Rodapé do Modal -->
+  <lightning-modal-footer>
+      <lightning-button
+          label="Cancelar"
+          title="Cancelar"
+          variant="neutral" 
+          disabled={saveInProcess}
+          onclick={handleCloseClick}>
+      </lightning-button >
+      <lightning-button 
+          label="Concluído"
+          title="Concluído"
+          variant="brand" 
+          onclick={handleSaveClick}>
+      </lightning-button >
+  </lightning-modal-footer>
+</template>

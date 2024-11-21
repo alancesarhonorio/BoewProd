@@ -1,0 +1,92 @@
+<template>
+    <lightning-card title={title} icon-name="standard:approval">
+        <lightning-button 
+            slot="actions" 
+            label="Atualizar" 
+            icon-name="utility:refresh" 
+            variant="brand"
+            alternative-text="Refresh" 
+            class="slds-m-left_xx-small" 
+            title="Refresh" 
+            onclick={reloadrecords}>
+        </lightning-button>
+
+        <template if:true={wrapperListtrue}>
+            <lightning-button
+              slot="actions"
+              variant="success"
+              label="Aprovar"
+              title="Approve"
+              disabled={enable_app_rej}
+              icon-name="action:approval"
+              class="slds-m-left_x-small"
+              onclick={handleconformClick}
+            ></lightning-button>
+                 </template> 
+
+        
+
+        <template if:true={wrapperListtrue}>
+            <div style="height:15rem">
+                <lightning-datatable key-field="workItemId" onsave={handleSave} data={wrapperList} columns={columns}
+                    draft-values={draftValues} sorted-by={sortBy} sorted-direction={sortDirection}
+                    onsort={handleSortdata} onrowaction={handleRowAction} onrowselection={enablebuttons}
+                    enable-infinite-loading={showinfiniteLoadingSpinner} onloadmore={loadMoreData}>
+                </lightning-datatable>
+            </div>
+        </template>
+
+        <template if:false={wrapperListtrue}>
+            <div style="height:15rem">
+                <br /><br /><br /><br />
+             <center>Nenhuma solicitação de aprovação requer sua atenção no momento.</center>
+                <br /><br /><br /><br />
+            </div>
+        </template>
+
+        <div if:true={showLoadingSpinner}>
+            <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+        </div>
+
+        <p slot="footer">
+            <lightning-formatted-text value={footertext}></lightning-formatted-text>
+        </p>
+
+            <div if:true={isDialogVisible}>
+        
+                <div class="slds-container_small">
+                    <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true"
+                        aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                        <div class="slds-modal__container">
+                            <header class="slds-modal__header">
+                                <h2 data-id="title" class="slds-text-heading_medium slds-hyphenate">Aprovar Oportunidade</h2>
+                            </header>
+                            <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-3">
+        
+                                <h1 data-id="title" class="slds-text-heading_medium slds-hyphenate">As oportunidades selecionadas serão aprovadas, deseja realmente continuar?</h1>
+                           </div>
+                           <footer class="slds-modal__footer" if:true={isApprove}>
+
+                            <lightning-button
+                                label="Aprovar"
+                                variant="brand"
+                                title="Approve"
+                                onclick={processrec}
+                            ></lightning-button>
+                            &nbsp;&nbsp;
+                            <lightning-button
+                                label="Fechar"
+                                variant="neutral"
+                                onclick={closeUserSearchModal}
+                            ></lightning-button>
+                        </footer>
+
+                        </div>
+                    </section>
+                    <div class="slds-backdrop slds-backdrop_open"></div>
+                </div>            
+            </div>
+
+    </lightning-card>
+
+</template>

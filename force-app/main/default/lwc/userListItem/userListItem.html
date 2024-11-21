@@ -1,0 +1,24 @@
+<template>
+    <a href="#" onclick={handleClick}>
+        <lightning-layout vertical-align="center">
+            <lightning-layout-item>
+                <img
+                    lwc:if={user.SmallPhotoUrl}
+                    src={user.SmallPhotoUrl}
+                    alt="Profile photo"
+                />
+                <lightning-icon
+                    lwc:else
+                    icon-name="standard:avatar"
+                    alternative-text="Missing profile photo"
+                    size="medium"
+                    title="Missing profile photo"
+                ></lightning-icon>
+                <!-- <img src={user.SmallPhotoUrl} alt="Profile photo" /> -->
+            </lightning-layout-item>
+            <lightning-layout-item padding="around-small">
+                <p>{user.Name}</p>
+            </lightning-layout-item>
+        </lightning-layout>
+    </a>
+</template>

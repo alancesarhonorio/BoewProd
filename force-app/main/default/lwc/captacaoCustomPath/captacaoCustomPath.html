@@ -1,0 +1,32 @@
+<template>
+    <lightning-card >
+        <lightning-progress-indicator current-step={currentValue} type="path" variant="base">
+            <template for:each={steps} for:item="step">
+                <lightning-progress-step 
+                    label={step.label} 
+                    value={step.value} 
+                    key={step.label}
+                    onstepfocus={handleStepClick} >
+                </lightning-progress-step>
+            </template>
+            <template if:true={showCurrentStage}>
+                <lightning-button 
+                    variant="brand" 
+                    class="slds-m-left_x-small"
+                    label="Marcar como Status atual" 
+                    title="Marcar como Status atual" 
+                    onclick={handleCurrentUpdate} >
+                </lightning-button>
+            </template>
+            <template if:true={showCompleteStage}>
+                <lightning-button 
+                    variant="brand" 
+                    class="slds-m-left_x-small"
+                    label="Marcar Status como concluído" 
+                    title="Marcar Status como concluido"  
+                    onclick={handleCompleteUpdate} >
+                </lightning-button>
+            </template>
+        </lightning-progress-indicator>
+    </lightning-card>
+</template>

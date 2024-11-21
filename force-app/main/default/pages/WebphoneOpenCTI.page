@@ -1,0 +1,189 @@
+<apex:page showHeader="false" standardStylesheets="false" sidebar="false" applyHtmlTag="false" applyBodyTag="false" docType="html-5.0" lightningStylesheets="false">
+<script type="text/javascript" src="/sforce/one/48.0/api.js"></script>
+<script src="/support/console/48.0/integration.js"></script>
+<script src="/support/api/48.0/lightning/opencti.js" type="text/javascript"></script>
+<script type="text/javascript">
+setTimeout(() => {
+    sforce.opencti.setSoftphonePanelVisibility({ visible: true });
+}, 1000);
+sforce.opencti.setSoftphonePanelHeight({ heightPX: 680 });
+sforce.opencti.enableClickToDial({ callback: function callback(ev) { console.log('DBG_CLICK_TO_CALL_ENABLED'); } })
+sforce.opencti.onClickToDial({
+    listener: function (payload) {
+        document.getElementById('pbxFrame').contentWindow.postMessage(payload, 'https://fone.55pbx.com');
+        sforce.opencti.setSoftphonePanelVisibility({ visible: true });
+    }
+});
+
+const resize = (width, height) => {
+    sforce.opencti.setSoftphonePanelWidth({ widthPX: width });
+    sforce.opencti.setSoftphonePanelHeight({ heightPX: height });
+    document.getElementById('pbxFrame').contentWindow.postMessage('scroll', 'https://fone.55pbx.com');
+};
+
+const show = (id) => {
+    sforce.opencti.screenPop({ params: { recordId: id }, type: sforce.opencti.SCREENPOP_TYPE.SOBJECT });
+    sforce.opencti.refreshView();
+};
+
+const runApex = (methodName, methodParams) => {
+    return new Promise((resolve, reject) => {
+        sforce.opencti.runApex({
+            apexClass: 'GenericEntity',
+            methodName,
+            methodParams,
+            callback: (res) => {
+                if (!res.success && res.errors.length > 0) {
+                    return reject(res.errors[0]);
+                }
+                const result = JSON.parse(res.returnValue.runApex);
+                return resolve(result);
+            }
+        });
+    });
+}
+
+const getEntity = (entityName, searchData, projection) => {
+    const methodParams = `entity=${entityName}&data=${searchData}&projection=${projection}`;
+    return runApex('getEntityByCustomData', methodParams);
+}
+
+const saveEntity = (entityName, data, update = false) => {
+    const methodParams = `name=${entityName}&data=${data}`;
+    const methodName = update ? 'updateEntity' : 'saveEntity';
+    return runApex(methodName, methodParams);
+}
+
+const updateEntity = (entityName, data) => {
+    return saveEntity(entityName, data, true);
+}
+
+const registerCall = (callDate, callType, description, customerId, customerType, whatId) => {
+    const customerInfo = {
+        customerId, customerType, whatId
+    };
+    const callInfo = {
+        callDate, callType
+    }
+    const methodParams = `description=${description}&customerInfo=${JSON.stringify(customerInfo)}&callInfo=${JSON.stringify(callInfo)}`;
+    return runApex('registerCall', methodParams);
+}
+
+const registerChat = (chatDate, chatType, description, customerId, customerType, whatId) => {
+    const customerInfo = {
+        customerId, customerType, whatId
+    };
+    const chatInfo = {
+        chatDate, chatType
+    }
+    const methodParams = `description=${description}&customerInfo=${JSON.stringify(customerInfo)}&chatInfo=${JSON.stringify(chatInfo)}`;
+    return runApex('registerChat', methodParams);
+}
+
+
+const getActionStrategy = (action, entityName, body, projection) => {
+    switch (action) {
+        case 'customers/list':
+        case 'incidents/list':
+        case 'sales/list':
+        case 'customers/find':
+        case 'incidents/find':
+        case 'sales/find':
+            return () => getEntity(entityName, body, projection);
+        case 'sales/create':
+        case 'incidents/create':
+        case 'customers/create':
+            return () => saveEntity(entityName, body);
+        case 'customers/update':
+        case 'sales/update':
+        case 'incidents/update':
+            return () => updateEntity(entityName, body);
+        case 'calls/update':
+        case 'calls/create':
+            try {
+                body = JSON.parse(body);
+            } catch (err) {
+                console.error(`%cDBG_ERROR_PARSING_BODY`, 'background: #F00; color: #FFF; font-size: 10px', err);
+                return null;
+            }
+            return () => registerCall(
+                body.opts_call.callDate,
+                body.opts_call.callType,
+                body.description,
+                body.opts_call.customerId,
+                body.opts_call.customerEntity,
+                body.opts_call.whatId
+            );
+        case 'chats/update':
+        case 'chats/create':
+            try {
+                body = JSON.parse(body);
+            } catch (err) {
+                console.error(`%cDBG_ERROR_PARSING_BODY`, 'background: #F00; color: #FFF; font-size: 10px', err);
+                return null;
+            }
+            return () => registerChat(
+                body.opts_chat.chatDate,
+                body.opts_chat.chatType,
+                body.description,
+                body.opts_chat.customerId,
+                body.opts_chat.customerEntity,
+                body.opts_chat.whatId
+            );
+        default:
+            return null;
+    }
+}
+
+const handler = async (ev) => {
+    if (ev.data.type !== 'confirmLoadIframe') console.log('%cDBG_EVENT_RECEIVED', 'background: #222; color: #bada55', ev.data);
+
+    if (ev.data.action === 'webPhoneResize') return resize(ev.data.width, ev.data.height);
+
+    if (ev.data.type === 'resize') return resize(ev.data.width, ev.data.height);
+
+    if (ev.data.type === 'show') return show(ev.data.id);
+
+    if (!!ev.data && !!ev.data.args) {
+        const data = ev.data.args[0];
+        const body = { ...data.payload };
+
+        if ((data.action.includes('create') || data.action.includes('update')) && !body.OwnerId) body.OwnerId = '{!$User.Id}';
+
+        const actionStrategy = getActionStrategy(data.action, data.opts.entityName, JSON.stringify(body), data.params.projection.join(','));
+
+        if (!actionStrategy) {
+            const message = { error: `Unable to process action ${data.action}`, action: data.action };
+            document.getElementById('pbxFrame').contentWindow.postMessage(message, 'https://fone.55pbx.com');
+            return;
+        }
+
+        console.log(`DBG_BODY_${data.action.toUpperCase()}`, body);
+        try {
+            const result = await actionStrategy();
+            document.getElementById('pbxFrame').contentWindow.postMessage({ result, id: data.id, action: data.action, created: true }, 'https://fone.55pbx.com');
+            if (result) {
+                if (result.Id) show(result.Id);
+                if (data.action.includes('find') && result[0].Id) show(result[0].Id);
+            }
+        } catch (err) {
+            console.error(`%cDBG_ERROR_${data.action.toUpperCase()}`, 'background: #F00; color: #FFF; font-size: 10px', err);
+            const message = { error: err, action: data.action, created: false, id: data.id };
+            document.getElementById('pbxFrame').contentWindow.postMessage(message, 'https://fone.55pbx.com');
+            return;
+        }
+    }
+};
+
+const loadListener = () => {
+    console.log('DBG_LISTENER_LOAD');
+    window.removeEventListener('message', handler);
+    window.addEventListener('message', handler);
+    document.getElementById('pbxFrame').contentWindow.postMessage({ hadshake: true, handshake: true }, 'https://fone.55pbx.com');
+}
+
+</script>
+<apex:pageBlock >
+    <iframe src="https://fone.55pbx.com/?env=salesforce-embedded,salesforce" allow="camera;microphone" scrolling="false" onLoad="loadListener()" id="pbxFrame" height="615" width="100%" frameBorder="0"></iframe>
+</apex:pageBlock>
+</apex:page>

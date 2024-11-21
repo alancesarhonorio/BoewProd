@@ -1,0 +1,15 @@
+<template>
+    <lightning-card title="Configurações de Roteamento Semanal" icon-name="standard:shift">
+        <div >
+            <lightning-datatable
+                key-field="Id"
+                class="slds-table"
+                data={routingSettingsData}
+                onsave={handleSave}
+                draft-values={draftValues}
+                columns={columns}
+                hide-checkbox-column="true">
+            </lightning-datatable>
+        </div>
+    </lightning-card>
+</template>

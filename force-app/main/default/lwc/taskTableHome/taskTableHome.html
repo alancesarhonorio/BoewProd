@@ -1,0 +1,147 @@
+<template>
+    <div>
+        <template if:true={showLoadingSpinner}>
+            <lightning-spinner alternative-text="Loading" size="small" variant="brand"></lightning-spinner>
+        </template>
+        <lightning-card >
+            <div class="slds-var-m-around_medium">
+                <template lwc:if={hasAcessToCadence}>
+                    <div style="display: flex; justify-content: space-between;">
+                        <h2 class="slds-text-heading_medium">
+                            Tarefas com Vencimento Hoje <strong>({tasks.length})</strong>
+                        </h2>
+                        <div style="display: flex; gap: 10px; margin: 0 20px">
+                            <lightning-button 
+                                label="Atualizar" 
+                                class="slds-m-bottom_small slds-text-decoration_none" 
+                                variant="brand" 
+                                onclick={reloadRecords} 
+                                disabled={showLoadingSpinner}>
+                            </lightning-button>
+                            
+                            <lightning-button
+                                label="Marcar Como Concluído"
+                                onclick={handleApproveTasks}
+                                disabled={isApproveButtonDisabled}>
+                            </lightning-button>
+                        </div>
+                    </div>
+                    <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                        <thead>
+                            <tr class="slds-line-height_reset">
+                                <th class="checkbox-cell">
+                                    <lightning-input type="checkbox" onchange={handleSelectAll} checked={isAllSelected}></lightning-input>
+                                </th>
+                                <th>Tarefa</th>
+                                <th>Nome do Lead</th>
+                                <th>Telefone</th>
+                                <th>Origem do lead</th>
+                                <th>Lead de captação</th>
+                                <th>Valor Médio Conta</th>
+                                <th>Status do Lead</th>
+                                <th>Data e Hora do Lembrete</th>
+                                <th>Data de Criação do Lead</th>
+                                <th>Data da Última Atividade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={isTaskSelected} for:item="task">
+                                <tr key={task.id} class="slds-hint-parent">
+                                    <td class="checkbox-cell">
+                                        <lightning-input 
+                                            type="checkbox" 
+                                            data-id={task.id} 
+                                            onchange={handleSelectOne}
+                                            checked={task.isSelected}> 
+                                        </lightning-input>
+                                    </td>
+                                    <td>
+                                        <a onclick={navigateToTask} data-id={task.id} target="_blank">{task.subject}</a>
+                                    </td>
+                                    <td>
+                                        <a onclick={navigateToLead} data-id={task.leadId} target="_blank">{task.name}</a>
+                                    </td>
+                                    <td>
+                                        <lightning-click-to-dial value={task.phone}></lightning-click-to-dial>
+                                    </td>
+                                    <td>{task.originSource}</td>
+                                    <td>
+                                        <lightning-input 
+                                            type="checkbox" 
+                                            checked={task.leadCaptacao} 
+                                            disabled>
+                                        </lightning-input>
+                                    </td>
+                                    <td>{task.valorMedioConta}</td>
+                                    <td>{task.status}</td>
+                                    <td>{task.reminderDateTime}</td>
+                                    <td>{task.creatDate}</td>
+                                    <td>{task.leadActivityDate}</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </template>
+                <template lwc:else>
+                    <lightning-icon icon-name="custom:custom77" size="small" alternative-text="Sem acesso" title="Sem acesso a cadência"></lightning-icon>
+                    <p>Sem acesso a cadência de leads</p>
+                </template>
+            </div>
+        </lightning-card>
+
+        <!-- Modal -->
+        <template if:true={isDialogVisible}>
+            <template if:true={showLoadingSpinner}>
+                <lightning-spinner alternative-text="Loading" size="small" variant="brand"></lightning-spinner>
+            </template>
+            <template if:false={showLoadingSpinner}>
+            <section role="dialog" aria-labelledby="modal-heading-01" aria-modal="true" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <h2 id="modal-heading-01">Aprovar Tarefas Selecionadas</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <h1>Selecione um status</h1>
+                        <lightning-input 
+                            type="radio" 
+                            name="approvalStatus" 
+                            value="Concluída" 
+                            onchange={handleRadioChange} 
+                            label="Concluída (Com retorno do Cliente)">
+                        </lightning-input>
+                        <lightning-input 
+                            type="radio" 
+                            name="approvalStatus" 
+                            value="Finalizada" 
+                            onchange={handleRadioChange} 
+                            label="Finalizada (Sem retorno do Cliente)">
+                        </lightning-input>
+                        
+                        <lightning-input
+                            disabled = {desqualificadoRadioVisible}
+                            type="radio" 
+                            name="approvalStatus" 
+                            value="Desqualificado" 
+                            onchange={handleRadioChange} 
+                            label="Finalizada (Lead Desqualificado)">
+                        </lightning-input>
+                        
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <lightning-button 
+                            label="Cancelar" 
+                            onclick={closeModal}>
+                        </lightning-button>
+                        <lightning-button 
+                            label="Confirmar" 
+                            variant="brand" 
+                            onclick={confirmApproval}>
+                        </lightning-button>
+                    </footer>
+                </div>
+            </section>
+            </template>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+    </div>
+</template>

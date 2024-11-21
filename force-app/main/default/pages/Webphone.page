@@ -1,0 +1,321 @@
+<apex:page showHeader="false" standardStylesheets="false" sidebar="false" applyHtmlTag="false" applyBodyTag="false" docType="html-5.0" lightningStylesheets="false">
+<script type="text/javascript" src="/sforce/one/48.0/api.js"></script>
+<script src="/support/console/48.0/integration.js"></script>
+<script src="/support/api/48.0/lightning/opencti.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+setTimeout(() => {
+    // sforce.opencti.setSoftphonePanelHeight({heightPX: 710, callback: (ev) => console.log(ev)})
+    sforce.opencti.setSoftphonePanelVisibility({ visible: true });
+}, 1000);
+
+sforce.opencti.setSoftphonePanelHeight({ heightPX: 680 });
+
+sforce.opencti.enableClickToDial({ callback: function callback(ev) { console.log('click to call enabled'); } })
+
+sforce.opencti.onClickToDial({
+    listener: function (payload) {
+        document.getElementById('pbxFrame').contentWindow.postMessage(payload, 'https://fonehomologa2.55pbx.com/');
+        sforce.opencti.setSoftphonePanelVisibility({ visible: true });
+    }
+});
+
+
+let selectedCustomerId;
+const handler = (ev) => {
+    if (ev.data.type !== 'confirmLoadIframe') console.log('%cEvent received', 'background: #222; color: #bada55', ev);
+
+    if (ev.data.type == 'resize') {
+        sforce.opencti.setSoftphonePanelWidth({ widthPX: ev.data.width });
+        sforce.opencti.setSoftphonePanelHeight({ heightPX: ev.data.height });
+        document.getElementById('pbxFrame').contentWindow.postMessage('scroll', 'https://fonehomologa2.55pbx.com/');
+    }
+
+    if (!!ev.data && !!ev.data.args) {
+        const data = ev.data.args[0];
+        let body = { ...data.payload };
+        let searchData = JSON.stringify(data.payload);
+        let phone = data.payload.phone;
+        let entity = {
+            action: data.action.split('/')[0]
+        }
+
+        const Entities = {
+            customers: data.opts.customerEntity,
+            incidents: data.opts.ticketEntity,
+            sales: data.opts.saleEntity
+        }
+
+        const CallTypes = {
+            receptive: 'Inbound',
+            active: 'Outbound',
+            internal: 'Internal',
+            redirecionamento: 'Inbound'
+        }
+
+        const CallTypes55pbx = {
+            receptive: 'Receptivo',
+            active: 'Ativa',
+            internal: 'Interna',
+            redirecionamento: 'Redirecionamento'
+        }
+
+        const Projections = {
+            customers: data.opts.customerProjection,
+            incidents: data.opts.ticketProjection,
+            sales: data.opts.saleProjection
+        }
+
+        entity = {
+            ...entity,
+            name: Entities[entity.action] || 'User',
+            projection: Projections[entity.action] || 'name'
+        }
+
+        if (entity.action === 'sales') {
+            searchData = searchData.replace('customer_id', 'AccountId');
+            if (body.customer_id) {
+                body.AccountId = body.customer_id;
+            }
+            delete body.customer_name;
+            delete body.customer_cnpj;
+            delete body.customer_code;
+            delete body.customer_cpf;
+            delete body.customer_email;
+            delete body.customer_id;
+            delete body.customer_phone;
+            delete body.user_email;
+            delete body.user_name;
+            delete body.user_phone;
+            delete body.user_branch;
+            delete body.user_branchNumber;
+        }
+
+        switch (data.action) {
+            case 'customers/list':
+                sforce.opencti.runApex({
+                    apexClass: 'GenericEntity',
+                    methodName: 'getEntityByCustomData',
+                    methodParams: 'entity=' + entity.name + '&data=' + searchData + '&projection=' + entity.projection,
+                    callback: (res) => {
+                        if (!res.success && res.errors.length > 0) {
+                            console.error('%cERROR_LIST_CUSTOMERS', 'background: #F00; color: #FFF; font-size: 10px', res.errors);
+                            return;
+                        }
+                        const result = JSON.parse(res.returnValue.runApex);
+
+                        if (data.opts.customerEntity === 'Contact') for (let contact of result) {
+                            if (!contact.lastName && !contact.LastName && contact.Name) contact.lastName = contact.LastName = contact.Name;
+                        }
+
+                        document.getElementById('pbxFrame').contentWindow.postMessage({ result, action: data.action }, 'https://fonehomologa2.55pbx.com/');
+                        sforce.opencti.screenPop({ params: { recordId: result.Id }, type: sforce.opencti.SCREENPOP_TYPE.SOBJECT });
+                    }
+                });
+                break;
+            case 'incidents/list':
+            case 'sales/list':
+                sforce.opencti.runApex({
+                    apexClass: 'GenericEntity',
+                    methodName: 'getEntityByCustomData',
+                    methodParams: 'entity=' + entity.name + '&data=' + searchData + '&projection=' + entity.projection,
+                    callback: (res) => {
+                        if (!res.success && res.errors.length > 0) {
+                            console.error('%cERROR_LIST_SALES_OR_INCIDENTS', 'background: #F00; color: #FFF; font-size: 10px', res.errors);
+                            return;
+                        }
+                        const result = JSON.parse(res.returnValue.runApex);
+                        document.getElementById('pbxFrame').contentWindow.postMessage({ result, action: data.action }, 'https://fonehomologa2.55pbx.com/');
+                        sforce.opencti.screenPop({ params: { recordId: result.Id }, type: sforce.opencti.SCREENPOP_TYPE.SOBJECT });
+                    }
+                });
+                break;
+
+            case 'customers/find':
+            case 'incidents/find':
+            case 'sales/find':
+                sforce.opencti.runApex({
+                    apexClass: 'GenericEntity',
+                    methodName: 'getEntityByCustomData',
+                    methodParams: 'entity=' + entity.name + '&data={"id":"' + data.payload.id + '"}&projection=' + entity.projection,
+                    callback: (res) => {
+                        if (!res.success && res.errors.length > 0) {
+                            console.error('%cERROR_FIND_SALES_OR_INCIDENTS_OR_CUSTOMERS', 'background: #F00; color: #FFF; font-size: 10px', res.errors);
+                            return;
+                        }
+                        const result = JSON.parse(res.returnValue.runApex)[0];
+                        document.getElementById('pbxFrame').contentWindow.postMessage({ ...result, action: data.action }, 'https://fonehomologa2.55pbx.com/');
+                        if (data.action === 'customers/find') {
+                            selectedCustomerId = result.Id;
+                            console.log('customer selected:::::::', selectedCustomerId);
+                        }
+                        sforce.opencti.screenPop({ params: { recordId: result.Id }, type: sforce.opencti.SCREENPOP_TYPE.SOBJECT });
+                    }
+                });
+                break;
+
+            case 'customers/create':
+            case 'sales/create':
+                sforce.opencti.runApex({
+                    apexClass: 'GenericEntity',
+                    methodName: 'saveEntity',
+                    methodParams: 'name=' + entity.name + '&data=' + JSON.stringify(body),
+                    callback: (res) => {
+                        if (!res.success && res.errors.length > 0) {
+                             console.error('%cERROR_CREATE_CUSTOMERS_OR_SALES', 'background: #F00; color: #FFF; font-size: 10px', res.errors);
+                             return;
+                        }
+                        const result = JSON.parse(res.returnValue.runApex);
+                        document.getElementById('pbxFrame').contentWindow.postMessage({ ...result, action: data.action, created: true }, 'https://fonehomologa2.55pbx.com/');
+                        sforce.opencti.screenPop({ params: { recordId: result.Id }, type: sforce.opencti.SCREENPOP_TYPE.SOBJECT });
+                           sforce.opencti.refreshView({
+                            callback: () => {}
+                       })
+                    }
+                });
+                break;
+
+           case 'incidents/create':
+                console.log('customer selected:::::::', selectedCustomerId);
+                data.payload = {
+                    Subject: 'DETALHES DO CHAMADO',
+                    Status: data.payload.status || data.payload.Status,
+                    Comments: data.payload.Comments || ''
+                };
+
+                switch(data.opts.customerEntity) {
+                    case 'Contact': data.payload.ContactId = data.payload.ContactId || data.payload.call_customer_id; break;
+                    case 'Account':
+                    default: data.payload.AccountId = data.payload.AccountId || data.payload.call_customer_id;
+                }
+
+                console.log('Criando ticket:::', data.payload);
+
+                sforce.opencti.runApex({
+                    apexClass: 'GenericEntity',
+                    methodName: 'saveEntity',
+                    methodParams: 'name=' + data.opts.ticketEntity + '&data=' + JSON.stringify(data.payload),
+                    callback: (res) => {
+                        if (!res.success && res.errors.length > 0) {
+                            console.error('%cERROR_CREATE_INCIDENTS', 'background: #F00; color: #FFF; font-size: 10px', res.errors);
+                            return;
+                        }
+                        const result = JSON.parse(res.returnValue.runApex);
+                        document.getElementById('pbxFrame').contentWindow.postMessage({ ...result, action: data.action, created: true }, 'https://fonehomologa2.55pbx.com/');
+
+                        sforce.opencti.screenPop({ params: { recordId: result.Id }, type: sforce.opencti.SCREENPOP_TYPE.SOBJECT });
+                           sforce.opencti.refreshView({
+                            callback: () => {
+                               document.getElementById('pbxFrame').contentWindow.postMessage({ hadshake: true }, 'https://fonehomologa2.55pbx.com/');
+                            }
+                       })
+                    }
+                });
+                break;
+
+            case 'customers/update':
+            case 'sales/update':
+                sforce.opencti.runApex({
+                    apexClass: 'GenericEntity',
+                    methodName: 'updateEntity',
+                    methodParams: 'name=' + entity.name + '&data=' + JSON.stringify(body),
+                    callback: (res) => {
+                        if (!res.success && res.errors.length > 0) {
+                            console.error('%cERROR_UPDATE_CUSTOMERS_OR_SALES', 'background: #F00; color: #FFF; font-size: 10px', res.errors);
+                            return;
+                        }
+                        const result = JSON.parse(res.returnValue.runApex);
+                        document.getElementById('pbxFrame').contentWindow.postMessage({ ...result, action: data.action, created: true }, 'https://fonehomologa2.55pbx.com/');
+                        sforce.opencti.screenPop({ params: { recordId: result.Id }, type: sforce.opencti.SCREENPOP_TYPE.SOBJECT });
+                        sforce.opencti.refreshView({
+                            callback: () => {}
+                       })
+                    }
+                });
+                break;
+
+            case 'incidents/update':
+
+                let payload = {};
+                for (let k in data.payload) {
+                    if (k.startsWith('call_')) continue;
+                    payload[k[0].toUpperCase() + k.slice(1)] = data.payload[k];
+                }
+                data.payload = payload;
+
+                console.log("payload::::", data.payload);
+                sforce.opencti.runApex({
+                    apexClass: 'GenericEntity',
+                    methodName: 'updateEntity',
+                    methodParams: 'name=' + data.opts.ticketEntity + '&data=' + JSON.stringify(data.payload),
+                    callback: (res) => {
+                        if (!res.success && res.errors.length > 0) {
+                            console.error('%cERROR_UPDATE_INCIDENTS', 'background: #F00; color: #FFF; font-size: 10px', res.errors);
+                            return;
+                        }
+                        const result = JSON.parse(res.returnValue.runApex);
+                        document.getElementById('pbxFrame').contentWindow.postMessage({ ...result, action: data.action, created: true }, 'https://fonehomologa2.55pbx.com/');
+                        sforce.opencti.screenPop({ params: { recordId: result.Id }, type: sforce.opencti.SCREENPOP_TYPE.SOBJECT });
+                        sforce.opencti.refreshView({
+                            callback: () => {}
+                       })
+                    }
+                });
+                break;
+            case 'calls/update':
+            case 'calls/create':
+                const callDate = data.payload.date || new Date().toISOString();
+                const callType = CallTypes[data.payload.type] || 'Outbound';
+                const PLACEHOLDER_NOT_FOUND = 'informaÃ§Ã£o nÃ£o encontrada';
+                const _callType = CallTypes55pbx[data.payload.type] || PLACEHOLDER_NOT_FOUND;
+                const branchNumber = data.payload.branchNumber || PLACEHOLDER_NOT_FOUND;
+                const queue = data.payload.queue || PLACEHOLDER_NOT_FOUND;
+                const branchName = data.payload.branchName || PLACEHOLDER_NOT_FOUND;
+                const duration = data.payload.duration || PLACEHOLDER_NOT_FOUND;
+                const callStatus = data.payload.branchNumber ? 'LigaÃ§Ã£o Atendida' : 'LigaÃ§Ã£o Desligada';
+                const description = `[${callStatus}] [${_callType}] por [${branchNumber}] [${branchName}] durante [${duration}] na fila [${queue}]`;
+                const entityId = data.payload.customer_id;
+                const entityType = data.opts && data.opts.customerEntity;
+
+                if (!entityId) {
+                    document.getElementById('pbxFrame').contentWindow.postMessage({ error: 'Id da entidade nÃ£o informado', action: data.action, created: false }, 'https://fonehomologa2.55pbx.com/');
+                    return;
+                }
+
+                sforce.opencti.runApex({
+                    apexClass: 'GenericEntity',
+                    methodName: 'registerCall',
+                    methodParams: `callDate=${callDate}&callType=${callType}&description=${description}&entityId=${entityId}&entityType=${entityType}`,
+                    callback: (res) => {
+                        if (!res.success && res.errors.length > 0) {
+                            console.error('%cERROR_CREATE_UPDATE_CALLS', 'background: #F00; color: #FFF; font-size: 10px', res.errors);
+                            document.getElementById('pbxFrame').contentWindow.postMessage({ ...JSON.parse(res.errors), action: data.action, created: false }, 'https://fonehomologa2.55pbx.com/');
+                            return;
+                        }
+                        const result = JSON.parse(res.returnValue.runApex);
+                        document.getElementById('pbxFrame').contentWindow.postMessage({ ...result, action: data.action, created: true }, 'https://fonehomologa2.55pbx.com/');
+                        sforce.opencti.screenPop({ params: { recordId: entityId }, type: sforce.opencti.SCREENPOP_TYPE.SOBJECT });
+                        sforce.opencti.refreshView({
+                            callback: () => {}
+                        })
+                    }
+                });
+                break;
+        }
+    }
+};
+
+loadListener = () => {
+    console.log('LISTENER LOAD!!!');
+    window.removeEventListener('message', handler);
+    window.addEventListener('message', handler);
+    document.getElementById('pbxFrame').contentWindow.postMessage({ hadshake: true, handshake: true }, 'https://fonehomologa2.55pbx.com/');
+}
+
+</script>
+
+<apex:pageBlock >
+    <iframe src="https://fonehomologa2.55pbx.com//?env=salesforce-embedded" allow="camera;microphone" scrolling="false" onLoad="loadListener()" id="pbxFrame" height="615" width="100%" frameBorder="0"></iframe>
+</apex:pageBlock>
+
+</apex:page>

@@ -1,0 +1,38 @@
+<template>
+    <lightning-card>
+        <!-- Container principal para centralização -->
+        <div class="slds-var-p-around_medium slds-grid slds-wrap slds-grid_vertical slds-align_absolute-center slds-text-align_center">
+            <!-- Proposta -->
+            <div if:true={proposalNumber} class="slds-m-bottom_small slds-grid slds-grid_align-center slds-grid_vertical-align-center">
+                <lightning-icon 
+                    icon-name="utility:info" 
+                    alternative-text="Número da proposta" 
+                    variant="info" 
+                    class="slds-icon slds-icon-text-success slds-m-right_x-small" 
+                    title="info variant small" 
+                    size="small"> 
+                </lightning-icon>
+                <span>Proposta: <a href={proposalLink} target="_blank" class="slds-text-link"> {proposalNumber}</a></span>
+            </div>
+
+            <!-- Ícone indicando o status de cadastro -->
+            <div class="slds-m-bottom_small slds-grid slds-grid_align-center slds-grid_vertical-align-center">
+                <lightning-icon 
+                    icon-name={statusIconName} 
+                    size="small" 
+                    alternative-text={statusIconAltText} 
+                    class="slds-icon" 
+                    title="Status">
+                </lightning-icon>
+                <span>{statusIconAltText}</span>
+            </div>
+
+            <!-- Mensagem de erro -->
+            <template if:true={errorMessage}>
+                <div class="slds-box slds-box_x-small slds-theme_alert-texture slds-theme_error slds-m-top_small">
+                    <strong>Erro:</strong> {errorMessage}
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

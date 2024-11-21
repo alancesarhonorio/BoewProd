@@ -1,0 +1,5 @@
+<design:component >
+    <design:attribute name="type" label="Message Type" default="success" description="One of - error, warning, success, or info. Defaults to success" />
+    <design:attribute name="message" label="Message Content" required="true" />
+    <design:attribute name="duration" label="Toast Duration" default="10" description="Time the toast appears before disappearing (in seconds). Default 10, minimum 5" />
+</design:component>
